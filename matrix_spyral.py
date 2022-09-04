@@ -17,7 +17,7 @@ def fill_matrix(matrix, rows, cols):
     first_row, last_row = 0, rows
     first_col, last_col = 0, cols
     num = 1
-    for i in range(rows * cols):
+    for i in range(cols * 2):
         if num > rows * cols:
             break
         if i % 4 == 0: # Первая строка, слева на право
