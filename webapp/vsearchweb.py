@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, escape, session
 from vsearch import search_for_letters
-from DBcm import UseDatabase
+from DBcm import UseDatabase, ConnectionError, CredentialsError, SQLError
 from checker import check_logged_in
 
 app = Flask(__name__)
@@ -37,7 +37,10 @@ def do_search() -> 'html':
     letters = request.form['letters']
     title = 'Here are your results:'
     results = str(search_for_letters(phrase, letters))
-    log_request(request, results)
+    try:
+        log_request(request, results)
+    except Exception as error:
+        print('Logging failed with this error:', str(error))
     return render_template('results.html',
                            the_results=results,
                            the_phrase=phrase,
@@ -57,16 +60,26 @@ def entry_page() -> 'html':
 @check_logged_in
 def view_the_log() -> 'html':
     """Выводит содержимое журнала запросов в виде HTML-таблицы."""
-    with UseDatabase(app.config['dbconfig']) as cursor:
-        _SQL = """select phrase, letters, ip, browser_string, results
-                  from log"""
-        cursor.execute(_SQL)
-        contents = cursor.fetchall()
-    titles = ('Phrase', 'Letters', 'Remote address', 'User agent', 'Results')
-    return render_template('viewlog.html',
-                           the_title='View Log',
-                           the_row_titles=titles,
-                           the_data=contents,)
+    try:
+        with UseDatabase(app.config['dbconfig']) as cursor:
+            _SQL = """select phrase, letters, ip, browser_string, results
+                      from log"""
+            cursor.execute(_SQL)
+            contents = cursor.fetchall()
+        titles = ('Phrase', 'Letters', 'Remote address', 'User agent', 'Results')
+        return render_template('viewlog.html',
+                               the_title='View Log',
+                               the_row_titles=titles,
+                               the_data=contents,)
+    except ConnectionError as error:
+        print('Is your database switched on? Error:', str(error))
+    except CredentialsError as error:
+        print('User-id/Password issues. Error:', str(error))
+    except SQLError as error:
+        print('Is your query correct? Error:', str(error))
+    except Exception as error:
+        print('Something went wrong:', str(error))
+    return 'Error'
 
 
 @app.route('/login')
