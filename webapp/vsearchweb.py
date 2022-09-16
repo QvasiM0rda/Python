@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, escape, session
+from flask import Flask, render_template, request, escape, session, copy_current_request_context
 from vsearch import search_for_letters
 from DBcm import UseDatabase, ConnectionError, CredentialsError, SQLError
 from checker import check_logged_in
+from time import sleep
+from threading import Thread
 
 app = Flask(__name__)
 app.secret_key = 'YouWillNeverGuessMySecretKey'
@@ -11,34 +13,37 @@ app.config['dbconfig'] = { 'host': '127.0.0.1',
                            'password': '',
                            'database': 'vsearchlogDB', }
 
-def log_request(req: 'flask_request', res: str) -> None:
-    """Журналирует веб-запрос и возвращает результаты."""
-    with UseDatabase(app.config['dbconfig']) as cursor:
-        _SQL = """insert into log
-                  (phrase, letters, ip, browser_string, results)
-                  values
-                  (%s, %s, %s, %s, %s)"""
-        
-        index_first = req.user_agent.string.rfind(' ') + 1
-        index_last = req.user_agent.string.rfind('/')
-        browser = req.user_agent.string[index_first:index_last]
-        
-        cursor.execute(_SQL, (req.form['phrase'],
-                              req.form['letters'],
-                              req.remote_addr,
-                              browser,
-                              res, ))
-
-
 @app.route('/search', methods=['POST'])
 def do_search() -> 'html':
+    @copy_current_request_context
+    def log_request(req: 'flask_request', res: str) -> None:
+        """Журналирует веб-запрос и возвращает результаты."""
+        sleep(15)
+        with UseDatabase(app.config['dbconfig']) as cursor:
+            _SQL = """insert into log
+                      (phrase, letters, ip, browser_string, results)
+                      values
+                      (%s, %s, %s, %s, %s)"""
+
+            index_first = req.user_agent.string.rfind(' ') + 1
+            index_last = req.user_agent.string.rfind('/')
+            browser = req.user_agent.string[index_first:index_last]
+            
+            cursor.execute(_SQL, (req.form['phrase'],
+                                  req.form['letters'],
+                                  req.remote_addr,
+                                  browser,
+                                  res, ))
+
+
     """Извлекает данные из запроса; выполняет поиск; возвращает результаты."""
     phrase = request.form['phrase']
     letters = request.form['letters']
     title = 'Here are your results:'
     results = str(search_for_letters(phrase, letters))
     try:
-        log_request(request, results)
+        t = Thread(target=log_request, args=(request, results))
+        t.start()
     except Exception as error:
         print('Logging failed with this error:', str(error))
     return render_template('results.html',
