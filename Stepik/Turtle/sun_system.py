@@ -14,13 +14,16 @@ def planet(size, color, name):
     write(name)
 
 
-planets = { 'Солнце': [250, 'yellow'], 'Меркурий': [50, 'brown'], 'Венера': [100, 'brown'], 'Земля': [75, 'green'],
-            'Марс': [40, 'red'], 'Юпитер': [150, 'brown'], 'Сатурн': [140, 'brown'], 'Уран': [120, 'light blue'],
-            'Нептун': [100, 'blue'], 'Плутон': [25, 'brown'] }
+planets = { 'Солнце': [150, 'yellow'], 'Меркурий': [50, 'brown'], 'Венера': [90, 'brown'], 'Земля': [75, 'green'],
+            'Марс': [40, 'red'], 'Юпитер': [120, 'brown'], 'Сатурн': [110, 'brown'], 'Уран': [110, 'light blue'],
+            'Нептун': [85, 'blue'], 'Плутон': [25, 'brown'] }
 
-change_position(-400, 0)
+change_position(-900, 0)
 for k, v in planets.items():
-    x = xcor() - v[0] / 2
-    y = ycor() - v[0] / 2
+    x = xcor() + v[0]
+    y = ycor() - v[0]
     change_position(x, y)
     planet(v[0], v[1], k)
+    x = xcor() + v[0] + 10
+    y = 0
+    change_position(x, y)
