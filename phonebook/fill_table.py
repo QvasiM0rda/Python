@@ -1,3 +1,4 @@
+import mysql.connector
 from DBcm import UseDatabase, ConnectionError, CredentialsError, SQLError
 from get_data_from_xls import get_data_from_xls
 
@@ -9,19 +10,24 @@ class FillTable:
         self.table = table_name
         self.fields = self.set_fields()
         self.values = get_data_from_xls(self.table)
+        self.is_foreign_keys = False
 
     def set_fields(self) -> list:
         with UseDatabase(self.configurations) as cursor:
             _SQL = f'''SELECT COLUMN_NAME
                        FROM information_schema.columns
-                       WHERE TABLE_NAME = "{self.table}"'''
+                       WHERE TABLE_SCHEMA = 'phonebook' AND TABLE_NAME = "{self.table}"'''
             cursor.execute(_SQL)
-            fields = ', '.join([field[0] for field in cursor.fetchall()])
-            return fields
+            result = cursor.fetchall()
+            return ', '.join([field[0] for field in result])
+    
 
     def fill_table(self) -> None:
         with UseDatabase(self.configurations) as cursor:
             for value in self.values:
-                _SQL = f'''INSERT INTO {self.table} ({self.fields})
-                           VALUES ({value})'''
-                cursor.execute(_SQL)
+                try:
+                    _SQL = f'''INSERT INTO {self.table} ({self.fields})
+                               VALUES ({value})'''
+                    cursor.execute(_SQL)
+                except mysql.connector.errors.IntegrityError as error:
+                    print(error)

@@ -8,3 +8,4 @@ config = {'host': '127.0.0.1',
 
 table = FillTable(config, 'positions')
 table.fill_table()
+
