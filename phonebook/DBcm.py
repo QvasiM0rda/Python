@@ -1,6 +1,5 @@
 import mysql.connector
 
-
 class ConnectionError(Exception):
     pass
 
@@ -21,7 +20,7 @@ class UseDatabase:
     def __enter__(self) -> 'cursor':
         try:
             self.conn = mysql.connector.connect(**self.configuration)
-            self.cursor = self.conn.cursor(buffered=True)
+            self.cursor = self.conn.cursor()
             return self.cursor
         except mysql.connector.errors.InterfaceError as error:
             raise ConnectionError(error)
@@ -36,4 +35,3 @@ class UseDatabase:
             raise SQLError(exc_value)
         elif exc_type:
             raise exc_type(exc_value)
-        

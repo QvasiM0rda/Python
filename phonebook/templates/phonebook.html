@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block body %}
+<form method='POST' action="/">
+    <table cellpadding="5">
+	    <caption>Телефонный справочник</caption>
+        <thead>
+            <tr>
+                {% for title in titles %}
+                <th> {{ title }} </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in content %}
+            <tr>
+                {% for item in row %}
+                    <th> {{ item }} </th>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+</form>
+{% endblock %}
