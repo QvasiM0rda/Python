@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block body %}
-<table cellpadding="5">
+
+<table>
     <caption>Телефонный справочник</caption>
 	<thead>
 		<tr>
@@ -8,15 +9,17 @@
 			<th> {{ title }} </th>
         {% endfor %}
         </tr>
+        <tr><th colspan="7"><a href="http://localhost:5000/edit">Добавить запись</a></th></tr>
     </thead>
     <tbody>
         {% for row in content %}
         <tr>
-            {% for item in row %}
-                <th> {{ item }} </th>
-            {% endfor %}
+        {% for item in row %}
+            <th> {{ item }} </th>
+        {% endfor %}
+            <th><a href="http://localhost:5000/delete">Удалить</a></th>
         </tr>
         {% endfor %}
     </tbody>
-	
+</table>
 {% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block body %}
+<form method="POST" action="/add_user">
+    <table>
+        <caption>Телефонный справочник</caption>
+	    <thead>
+    		<tr>
+            {% for title in titles %}
+    			<th> {{ title }} </th>
+            {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for name in names %}
+                    <th> <input name="{{ name }}"></th>
+                {% endfor %}
+                    <th><input type="submit" value="Добавить"></th>
+            </tr>
+        </tbody>
+    </table>
+</form>
+{% endblock %}
