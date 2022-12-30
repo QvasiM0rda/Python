@@ -1,12 +1,11 @@
 {% extends 'base.html' %}
 {% block body %}
-
 <table>
     <caption>Телефонный справочник</caption>
-	<thead>
-		<tr>
+    <thead>
+        <tr>
         {% for title in titles %}
-			<th> {{ title }} </th>
+            <th> {{ title }} </th>
         {% endfor %}
         </tr>
         <tr><th colspan="7"><a href="http://localhost:5000/edit">Добавить запись</a></th></tr>
@@ -17,7 +16,9 @@
         {% for item in row %}
             <th> {{ item }} </th>
         {% endfor %}
-            <th><a href="http://localhost:5000/delete">Удалить</a></th>
+            <form method="POST" action="/delete">
+                <th><button type="submit" name="id" value="{{ row[0] }}">Удалить</button></th>
+            </form>
         </tr>
         {% endfor %}
     </tbody>
