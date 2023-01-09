@@ -1,5 +1,6 @@
 from get_kbk import get_kbk
 
+
 def get_tax_name(kbk: str) -> str:
     kbk_dict = get_kbk()
     for k, v in kbk_dict.items():

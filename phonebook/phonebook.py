@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect
+from markupsafe import escape
 from DBcm import UseDatabase
 
 app = Flask(__name__)
@@ -22,7 +23,7 @@ def execute_script(script: str) -> list:
 
 
 @app.route('/', methods=['GET', 'POST'])
-def phonebook() -> 'html':
+def phonebook():
     # Начальная страница. Выводит информацию из БД
     script = '''SELECT id, last_name, first_name, patronymic, department, post, phone_number
               FROM users'''
@@ -31,21 +32,21 @@ def phonebook() -> 'html':
 
 
 @app.route('/edit')
-def edit() -> 'html':
+def edit():
     # Страница редактирования. Пока из редактирования только добавление новой записи.
     return render_template('edit.html', titles=app.config['titles'], names=app.config['names'])
 
 
 @app.route('/add_user', methods=['POST'])
-def add_user() -> 'html':
+def add_user():
     # Добавление новой записи.
-    user_id = request.form['id']
-    last_name = request.form['last_name']
-    first_name = request.form['first_name']
-    patronymic = request.form['patronymic']
-    department = request.form['department']
-    post = request.form['post']
-    phone_number = request.form['phone_number']
+    user_id = escape(request.form['id'])
+    last_name = escape(request.form['last_name'])
+    first_name = escape(request.form['first_name'])
+    patronymic = escape(request.form['patronymic'])
+    department = escape(request.form['department'])
+    post = escape(request.form['post'])
+    phone_number = escape(request.form['phone_number'])
     script = f'''INSERT INTO users (id, last_name, first_name, patronymic, department, post, phone_number)
                       VALUES ({user_id}, '{last_name}', '{first_name}', '{patronymic}',
                               '{department}', '{post}', '{phone_number}')'''
@@ -54,7 +55,7 @@ def add_user() -> 'html':
 
 
 @app.route('/delete', methods=['POST'])
-def delete() -> 'html':
+def delete():
     # Удаление записи.
     script = f'''DELETE FROM users WHERE id = {request.form.to_dict()['id']}'''
     execute_script(script)
