@@ -1,46 +1,39 @@
-import wget
-import requests
-from bs4 import BeautifulSoup
+'''Скрипт для скачивания списков отозванных сертификатов (СОС) с сайтов ФНС и Казначейства,
+потому что они обновляются каждый день и я устал качать их ручками'''
 
-url_crl = 'http://10.200.0.100/crl'
-url_cdp = 'http://10.200.0.100/cdp'
-url_kazna = 'http://crl.roskazna.ru/crl'
-urls = []
+import os, wget, requests  # os - для взаимодействия с файловой системой; wget скачивает файл; requests получает get-запрос из url
+from bs4 import BeautifulSoup as bs  # BeautifulSoup нужен для парсинга get-запроса и получения из него ссылок    
 
-reqs_crl = requests.get(url_crl)
-reqs_cdp = requests.get(url_cdp)
-reqs_kazna = requests.get(url_kazna)
+os.chdir('p:/!Admin/CRL')  # Каталог, куда будут скачиваться СОС
 
-soup_crl = BeautifulSoup(reqs_crl.text, 'html.parser')
-soup_cdp = BeautifulSoup(reqs_cdp.text, 'html.parser')
-soup_kazna = BeautifulSoup(reqs_kazna.text, 'html.parser')
+# Список адресов, где лежат СОС
+url_list = ['http://10.200.0.100/crl', 'http://10.200.0.100/cdp', 'http://crl.roskazna.ru/crl/', 'http://reestr-pki.ru/cdp/']
+request_list = [requests.get(url) for url in url_list]
+soups = [bs(request.text, 'html.parser') for request in request_list]
 
-#print("Getting links from", url_crl, end="... ")
-#for link in soup_crl.find_all('a'):
- #   get_link = link.get('href')
-  #  if len(get_link) > 1 and get_link[-1] == 'l' and get_link.find('%') == -1:
-   #     urls.append('http://10.200.0.100' + get_link)
-#print("Done!")
+# Получаем ссылки из get-запросов
+links = []
 
-#print("Getting links from", url_cdp, end="... ")
-#for link in soup_cdp.find_all('a'):
- #   get_link = link.get('href')
-  #  if len(get_link) > 1 and get_link[-1] == 'l'  and get_link.find('%') == -1:
-   #     urls.append('http://10.200.0.100' + get_link)
-#print("Done!")
+for soup in soups:
+    for link in soup.find_all('a'):
+        link = link.get('href')
+        if link[-3:] != 'crl':  # Отсеиваем сертификаты и другие ссылки по расширению
+            continue
 
-print("Getting links from", url_kazna, end="... ")
-for link in soup_kazna.find_all('a'):
-    get_link = link.get('href')
-    if len(get_link) > 1 and get_link[-1] == 'l'  and get_link.find('%') == -1:
-        if get_link[0] == 'h':
-            urls.append(get_link)
-        else:
-            urls.append('http://crl.roskazna.ru/crl/' + get_link)
-print("Done!")
+        # Для СОС на сайте ФНС ссылки начинаются с /. На сайте казны они либо лежат в той же директории, либо на другом сайте,
+        # откуда скачать их можно, только имею прямую ссылку.
+        if link[0] == '/':
+            link = 'http://10.200.0.100' + link
+        elif link[0:4] != 'http':
+            link = 'http://crl.roskazna.ru/crl/' + link
+        links.append(link)
 
-for url in urls:
-    print("Downloading: ", url, end="... ")
-    file_name = 'd:/CRL/' + url[url.rfind('/') + 1::]
-    wget.download(url, file_name)
-    print("Done!")
+# links - список всех полученных ссылок на СОС
+for link in links:
+    filename = wget.filename_from_url(link)
+    if os.path.exists(filename):
+        os.remove(filename)
+    try:
+        wget.download(link)
+    except:
+        print('The link is broken')
