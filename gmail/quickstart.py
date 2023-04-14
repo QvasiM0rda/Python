@@ -1,6 +1,9 @@
 from __future__ import print_function
 
 import os.path
+import base64
+import email
+from bs4 import BeautifulSoup
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -34,18 +37,26 @@ def main():
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
+    count = 0
     try:
         # Call the Gmail API
         service = build('gmail', 'v1', credentials=creds)
-        results = service.users().labels().list(userId='me').execute()
-        labels = results.get('labels', [])
+        results = service.users().messages().list(userId='me').execute()
 
-        if not labels:
-            print('No labels found.')
-            return
-        print('Labels:')
-        for label in labels:
-            print(label['name'])
+        messages = results.get('messages')
+
+        for msg in messages:
+            txt = service.users().messages().get(userId='me', id=msg['id']).execute()
+
+            payload = txt['payload']
+            headers = payload['headers']
+
+            sender = [d['value'] for d in headers if d['name'] == 'From']
+
+            if sender[0].split()[0] == 'Skillbox':
+                count += 1
+
+        print(f'Skillbox прислал мне уже {count} писем!')
 
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
