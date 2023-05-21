@@ -1,0 +1,1 @@
+print(input().lstrip("0"))
